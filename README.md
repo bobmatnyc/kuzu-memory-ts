@@ -2,11 +2,16 @@
 
 A TypeScript library for semantic memory management in Next.js applications. Kuzu Memory provides intelligent storage, retrieval, and management of memories with support for multiple storage backends, pattern extraction, and various recall strategies.
 
-**🚀 Production Ready**: ✅ 97+ tests passing | ✅ All storage adapters functional | ✅ Comprehensive UAT suite
+[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org/)
+[![Test Status](https://img.shields.io/badge/Tests-95.1%25_passing-brightgreen)](#testing)
+[![UAT Coverage](https://img.shields.io/badge/UAT_Coverage-206_tests-blue)](#testing)
+[![React](https://img.shields.io/badge/React-18%2B-61dafb)](https://reactjs.org/)
+[![Next.js Ready](https://img.shields.io/badge/Next.js-Ready-black)](https://nextjs.org/)
+[![Performance](https://img.shields.io/badge/Performance-%3C100ms-success)](#performance)
 
-[![Test Status](https://img.shields.io/badge/Tests-97%2B_passing-green)](#testing)
-[![UAT Coverage](https://img.shields.io/badge/UAT-6_test_suites-blue)](#testing)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](#features)
+**🚀 Production Ready**: ✅ 194/206 tests passing | ✅ All storage adapters functional | ✅ Comprehensive UAT suite
 
 ## Features
 

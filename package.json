@@ -2,6 +2,16 @@
   "name": "kuzu-memory",
   "version": "0.1.0",
   "description": "A TypeScript library for semantic memory management in Next.js applications",
+  "license": "MIT",
+  "author": "Bob Matnyc",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bobmatnyc/kuzu-memory-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bobmatnyc/kuzu-memory-ts/issues"
+  },
+  "homepage": "https://github.com/bobmatnyc/kuzu-memory-ts#readme",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
