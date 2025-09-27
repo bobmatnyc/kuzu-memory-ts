@@ -17,7 +17,7 @@ export function generateUUID(): string {
 
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
 
@@ -32,7 +32,7 @@ export function debounce<T extends (...args: any[]) => any>(
 
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   let inThrottle = false;
 
@@ -75,7 +75,7 @@ export function groupMemoriesByTag(memories: MemoryItem[]): Map<string, MemoryIt
 
 export function mergeMemoryMetadata(
   existing: Record<string, any> | undefined,
-  updates: Record<string, any>
+  updates: Record<string, any>,
 ): Record<string, any> {
   return { ...(existing || {}), ...updates };
 }
@@ -86,7 +86,7 @@ export function calculateMemoryScore(
     importance?: number;
     recency?: number;
     frequency?: number;
-  } = {}
+  } = {},
 ): number {
   const {
     importance = 0.4,

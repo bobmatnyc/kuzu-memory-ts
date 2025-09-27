@@ -5,14 +5,16 @@ export const defaultPatterns: Pattern[] = [
     id: 'identity',
     name: 'Personal Identity',
     description: 'Extracts personal identity declarations',
-    regex: '(My name is|I am|I\'m)\\s+([A-Z][a-z]+\\s+[A-Z][a-z]+)',
+    regex: '(?:My name is|I am|I\'m)\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+){0,2})(?=\\s+and\\b|\\s*[,.]|$)',
     priority: 11,
   },
   {
     id: 'name',
     name: 'Person Name',
     description: 'Extracts capitalized names',
-    regex: '\\b([A-Z][a-z]+\\s+[A-Z][a-z]+)\\b',
+    // More conservative pattern: Only match names in clear person contexts
+    // Requires 2-3 capitalized words followed by person-indicating verbs
+    regex: '\\b([A-Z][a-z]{2,}\\s+(?:[A-Z]\\.\\s+)?[A-Z][a-z]{2,}(?:\\s+[A-Z][a-z]{2,})?)\\b(?=\\s+(?:works|lives|said|says|wrote|thinks)\\b)',
     priority: 10,
   },
   {

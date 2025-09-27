@@ -32,7 +32,7 @@ export function useMemoryQuery(
 export function useMemoryQuery(
   clientOrOptions: KuzuMemory | null | (UseMemoryQueryOptions & { client: KuzuMemory | null; query: MemoryQuery }),
   query?: MemoryQuery,
-  options: UseMemoryQueryOptions = {}
+  options: UseMemoryQueryOptions = {},
 ): UseMemoryQueryReturn {
   // Handle both call patterns
   let client: KuzuMemory | null;
@@ -61,16 +61,28 @@ export function useMemoryQuery(
   const abortControllerRef = useRef<AbortController | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Memoize the query to prevent unnecessary re-fetches
-  const queryMemo = useMemo(() => queryObj, [
+  // Stable query memoization with optimized dependency tracking
+  const queryMemo = useMemo(() => {
+    // Create a stable query object with sorted tags and normalized date range
+    const stabilizedQuery: MemoryQuery = {
+      ...queryObj,
+      tags: queryObj.tags ? [...queryObj.tags].sort() : undefined,
+      dateRange: queryObj.dateRange ? {
+        start: new Date(queryObj.dateRange.start),
+        end: new Date(queryObj.dateRange.end)
+      } : undefined
+    };
+    return stabilizedQuery;
+  }, [
     queryObj.text,
     queryObj.type,
-    JSON.stringify(queryObj.tags),
-    JSON.stringify(queryObj.dateRange),
+    queryObj.tags?.join(','), // More efficient than JSON.stringify
+    queryObj.dateRange?.start?.toISOString(),
+    queryObj.dateRange?.end?.toISOString(),
     queryObj.limit,
     queryObj.offset,
     queryObj.sortBy,
-    queryObj.sortOrder
+    queryObj.sortOrder,
   ]);
 
   const fetchData = useCallback(async (signal?: AbortSignal) => {
@@ -78,13 +90,27 @@ export function useMemoryQuery(
       return;
     }
 
-    setIsLoading(true);
+    // Prevent duplicate loading states
+    setIsLoading(prev => prev ? prev : true);
     setError(null);
 
     try {
-      const results = await client.query(queryMemo);
+      // Add timeout to prevent hanging queries
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Query timeout after 10 seconds'));
+        }, 10000);
 
-      // Check if the request was aborted
+        // Clear timeout if signal is aborted
+        signal?.addEventListener('abort', () => clearTimeout(timeout));
+      });
+
+      const results = await Promise.race([
+        client.query(queryMemo),
+        timeoutPromise
+      ]);
+
+      // Check if the request was aborted after completion
       if (signal?.aborted) {
         return;
       }
@@ -100,7 +126,11 @@ export function useMemoryQuery(
       const error = err as Error;
       setError(error);
       onError?.(error);
-      console.error('Failed to query memories:', error);
+
+      // Only log non-abort errors
+      if (error.name !== 'AbortError') {
+        console.error('Failed to query memories:', error);
+      }
     } finally {
       if (!signal?.aborted) {
         setIsLoading(false);
@@ -121,27 +151,52 @@ export function useMemoryQuery(
     await fetchData(abortController.signal);
   }, [fetchData]);
 
-  // Initial data fetch
+  // Optimized data fetching with debouncing
   useEffect(() => {
     if (enabled && client) {
-      // Create new abort controller for this request
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
+      // Cancel any ongoing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
 
-      fetchData(abortController.signal);
+      // Debounce rapid query changes
+      const timeoutId = setTimeout(() => {
+        // Create new abort controller for this request
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
+        fetchData(abortController.signal);
+      }, 100); // 100ms debounce
+
+      return () => {
+        clearTimeout(timeoutId);
+      };
     } else if (!enabled) {
+      // Reset state when disabled
       setData(null);
       setIsLoading(false);
       setError(null);
+
+      // Cancel any ongoing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     }
+    return undefined;
   }, [client, enabled, fetchData]);
 
-  // Handle refetch interval
+  // Optimized refetch interval with better cleanup
   useEffect(() => {
     if (refetchInterval && refetchInterval > 0 && enabled && client) {
+      // Use a minimum interval to prevent excessive requests
+      const safeInterval = Math.max(1000, refetchInterval); // Min 1 second
+
       intervalRef.current = setInterval(() => {
-        refetch();
-      }, refetchInterval);
+        // Only refetch if not currently loading
+        if (!isLoading) {
+          refetch();
+        }
+      }, safeInterval);
 
       return () => {
         if (intervalRef.current) {
@@ -150,7 +205,14 @@ export function useMemoryQuery(
         }
       };
     }
-  }, [refetchInterval, enabled, client, refetch]);
+
+    // Clear interval if conditions not met
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    return undefined;
+  }, [refetchInterval, enabled, client, refetch, isLoading]);
 
   // Cleanup on unmount
   useEffect(() => {

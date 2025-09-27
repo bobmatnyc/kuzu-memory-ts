@@ -47,11 +47,17 @@ const memory = await createMemoryClient({
   dbName: 'my-app-memories',
 });
 
-// Store a memory
-const stored = await memory.create('I learned about TypeScript generics today', {
+// Store different types of memories
+const semantic = await memory.create('I learned about TypeScript generics today', {
   type: 'semantic',
   tags: ['programming', 'typescript'],
   importance: 0.8,
+});
+
+const preference = await memory.create('I prefer VS Code over other editors', {
+  type: 'preference',
+  tags: ['tools', 'editor'],
+  importance: 0.6,
 });
 
 // Recall memories
@@ -117,13 +123,14 @@ function MyComponent() {
 
 ## Memory Types
 
-Kuzu Memory supports different memory types based on cognitive psychology:
+Kuzu Memory supports six different memory types based on cognitive psychology:
 
 - **Episodic**: Personal experiences and events
 - **Semantic**: Facts and general knowledge
 - **Procedural**: How-to knowledge and skills
 - **Working**: Temporary, active information
 - **Sensory**: Immediate sensory impressions
+- **Preference**: User preferences, settings, and personal choices
 
 ## Storage Adapters
 
@@ -335,7 +342,7 @@ make test-coverage         # Coverage reports
 
 ## Development
 
-For detailed development information, see [DEVELOPER.md](./DEVELOPER.md).
+For detailed development information, see [DEVELOPER.md](./docs/developer/DEVELOPER.md).
 
 ```bash
 # Quick setup
@@ -351,10 +358,14 @@ npm install && npm run dev
 
 ### Documentation
 - **[CLAUDE.md](./CLAUDE.md)** - Priority-based guide for Claude Code
-- **[DEVELOPER.md](./DEVELOPER.md)** - Comprehensive contributor guide
-- **[EXAMPLES.md](./EXAMPLES.md)** - Complete usage examples and patterns
-- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Common issues and solutions
-- **[CODE_STRUCTURE.md](./CODE_STRUCTURE.md)** - Architectural documentation
+- **[EXAMPLES.md](./docs/EXAMPLES.md)** - Complete usage examples and patterns
+- **[TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
+
+#### Developer Documentation
+- **[DEVELOPER.md](./docs/developer/DEVELOPER.md)** - Comprehensive contributor guide
+- **[CODE_STRUCTURE.md](./docs/developer/CODE_STRUCTURE.md)** - Architectural documentation
+- **[PROJECT_SUMMARY.md](./docs/developer/PROJECT_SUMMARY.md)** - Project overview
+- **[PROJECT_STATUS.md](./docs/developer/PROJECT_STATUS.md)** - Current project status
 - **[Makefile](./Makefile)** - Single-path command reference
 
 ## License

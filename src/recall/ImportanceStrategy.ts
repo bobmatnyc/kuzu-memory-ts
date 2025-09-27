@@ -11,7 +11,7 @@ export class ImportanceStrategy implements RecallStrategy {
       filtered = memories.filter(memory =>
         memory.content.toLowerCase().includes(queryLower) ||
         memory.tags.some(tag => tag.toLowerCase().includes(queryLower)) ||
-        (memory.metadata && JSON.stringify(memory.metadata).toLowerCase().includes(queryLower))
+        (memory.metadata && JSON.stringify(memory.metadata).toLowerCase().includes(queryLower)),
       );
     }
 
@@ -23,7 +23,7 @@ export class ImportanceStrategy implements RecallStrategy {
     });
   }
 
-  score(memory: MemoryItem, query: string): number {
+  score(memory: MemoryItem, _query: string): number {
     // Return the importance score directly
     // Could be enhanced with query relevance
     return memory.importance || 0;

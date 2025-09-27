@@ -52,14 +52,14 @@ export class IndexedDBAdapter implements StorageAdapter {
         this.memories.update(item.id, {
           lastAccessed: now,
           accessCount: (item.accessCount || 0) + 1,
-        })
-      )
+        }),
+      ),
     );
 
     return items.map(item => ({
       ...this.normalizeItem(item),
       lastAccessed: now,
-      accessCount: (item.accessCount || 0) + 1
+      accessCount: (item.accessCount || 0) + 1,
     }));
   }
 
@@ -92,69 +92,137 @@ export class IndexedDBAdapter implements StorageAdapter {
     await this.memories.delete(id);
   }
 
-  async query(query: MemoryQuery): Promise<MemoryItem[]> {
-    let collection = this.memories.toCollection();
+  /**
+   * Apply filters to the collection
+   */
+  private applyFilters(collection: Dexie.Collection<MemoryItem, string>, query: MemoryQuery): Dexie.Collection<MemoryItem, string> {
+    let filtered = collection;
 
     // Filter by type
     if (query.type) {
-      collection = collection.filter(item => item.type === query.type);
+      filtered = filtered.filter(item => item.type === query.type);
     }
 
     // Filter by tags
     if (query.tags && query.tags.length > 0) {
-      collection = collection.filter(item =>
-        query.tags!.some(tag => item.tags.includes(tag))
+      filtered = filtered.filter(item =>
+        query.tags!.some(tag => item.tags.includes(tag)),
       );
     }
 
     // Filter by date range
     if (query.dateRange) {
-      collection = collection.filter(item => {
+      filtered = filtered.filter(item => {
         const timestamp = new Date(item.timestamp);
         return timestamp >= query.dateRange!.start && timestamp <= query.dateRange!.end;
       });
     }
 
-    // Get all matching items
-    let items = await collection.toArray();
+    return filtered;
+  }
 
-    // Text search (simple implementation - could be enhanced with full-text search)
-    if (query.text) {
-      const searchText = query.text.toLowerCase();
-      items = items.filter(item =>
-        item.content.toLowerCase().includes(searchText) ||
-        item.tags.some(tag => tag.toLowerCase().includes(searchText))
-      );
+  /**
+   * Apply text search to items
+   */
+  private applyTextSearch(items: MemoryItem[], searchText: string | undefined): MemoryItem[] {
+    if (!searchText) {
+      return items;
     }
 
-    // Sort items
-    items.sort((a, b) => {
-      let compareValue = 0;
+    const normalizedSearch = searchText.toLowerCase();
+    return items.filter(item =>
+      this.itemMatchesText(item, normalizedSearch),
+    );
+  }
 
-      switch (query.sortBy) {
-        case 'timestamp':
-          compareValue = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-          break;
-        case 'importance':
-          compareValue = (a.importance || 0) - (b.importance || 0);
-          break;
-        case 'accessCount':
-          compareValue = (a.accessCount || 0) - (b.accessCount || 0);
-          break;
-        case 'relevance':
-        default:
-          // For relevance, we use importance as a proxy for now
-          compareValue = (a.importance || 0) - (b.importance || 0);
-          break;
+  /**
+   * Check if an item matches search text
+   */
+  private itemMatchesText(item: MemoryItem, searchText: string): boolean {
+    // Check content
+    if (item.content.toLowerCase().includes(searchText)) {
+      return true;
+    }
+
+    // Check tags
+    if (item.tags.some(tag => tag.toLowerCase().includes(searchText))) {
+      return true;
+    }
+
+    // Check metadata
+    if (item.metadata) {
+      const metadataStr = JSON.stringify(item.metadata).toLowerCase();
+      if (metadataStr.includes(searchText)) {
+        return true;
       }
+    }
 
+    return false;
+  }
+
+  /**
+   * Sort items according to query parameters
+   */
+  private sortItems(items: MemoryItem[], query: MemoryQuery): MemoryItem[] {
+    const sorted = [...items];
+
+    sorted.sort((a, b) => {
+      const compareValue = this.compareItems(a, b, query.sortBy);
       return query.sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
-    // Apply pagination
-    const start = query.offset || 0;
-    const end = start + (query.limit || 10);
-    return items.slice(start, end).map(item => this.normalizeItem(item));
+    return sorted;
+  }
+
+  /**
+   * Compare two items for sorting
+   */
+  private compareItems(a: MemoryItem, b: MemoryItem, sortBy: string): number {
+    switch (sortBy) {
+      case 'timestamp':
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+
+      case 'importance':
+        return (a.importance || 0) - (b.importance || 0);
+
+      case 'accessCount':
+        return (a.accessCount || 0) - (b.accessCount || 0);
+
+      case 'relevance':
+      default:
+        // For relevance, we use importance as a proxy for now
+        // In a real implementation, this would use text similarity scores
+        return (a.importance || 0) - (b.importance || 0);
+    }
+  }
+
+  /**
+   * Apply pagination to results
+   */
+  private paginate<T>(items: T[], offset: number, limit: number): T[] {
+    const start = Math.max(0, offset);
+    const end = start + Math.max(1, limit);
+    return items.slice(start, end);
+  }
+
+  async query(query: MemoryQuery): Promise<MemoryItem[]> {
+    // Step 1: Apply database-level filters
+    const collection = this.applyFilters(this.memories.toCollection(), query);
+
+    // Step 2: Get all matching items from database
+    let items = await collection.toArray();
+
+    // Step 3: Apply text search (in-memory)
+    items = this.applyTextSearch(items, query.text);
+
+    // Step 4: Sort items
+    items = this.sortItems(items, query);
+
+    // Step 5: Apply pagination
+    items = this.paginate(items, query.offset || 0, query.limit || 10);
+
+    // Step 6: Normalize items before returning
+    return items.map(item => this.normalizeItem(item));
   }
 
   async clear(): Promise<void> {

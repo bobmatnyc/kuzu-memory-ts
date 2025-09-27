@@ -27,7 +27,7 @@ export class PatternExtractor {
 
   getAllPatterns(): Pattern[] {
     return Array.from(this.patterns.values()).sort((a, b) =>
-      (b.priority || 0) - (a.priority || 0)
+      (b.priority || 0) - (a.priority || 0),
     );
   }
 
@@ -105,9 +105,11 @@ export class PatternExtractor {
         const matches = text.matchAll(regex);
 
         for (const match of matches) {
+          // Use first capture group if available, otherwise use full match
+          const value = match[1] !== undefined ? match[1].trim() : match[0].trim();
           results.push({
             pattern: pattern.id,
-            value: match[0],
+            value: value,
             confidence: 1.0,
             metadata: {
               index: match.index,

@@ -31,14 +31,26 @@ export function useKuzuMemory(options: UseKuzuMemoryOptions = {}): UseKuzuMemory
   const initializedRef = useRef(false);
   const initPromiseRef = useRef<Promise<void> | null>(null);
 
-  // Memoize config to prevent unnecessary re-initializations
+  // Deeply memoize config to prevent unnecessary re-initializations
   const configMemo = useMemo(() => {
-    return {
+    // Create a stable config object with proper defaults
+    const stableConfig = {
       storage: config.storage || 'memory',
       dbName: config.dbName || 'kuzu-memory',
       version: config.version || 1,
-      ...config,
+      autoSync: config.autoSync ?? false,
+      syncInterval: config.syncInterval ?? 60000,
+      maxMemories: config.maxMemories ?? 10000,
+      decayEnabled: config.decayEnabled ?? true,
+      decayInterval: config.decayInterval ?? 86400000,
+      embeddingProvider: config.embeddingProvider,
+      nlp: config.nlp,
     };
+
+    // Only include defined values to maintain referential stability
+    return Object.fromEntries(
+      Object.entries(stableConfig).filter(([_, value]) => value !== undefined)
+    );
   }, [
     config.storage,
     config.dbName,
@@ -48,14 +60,22 @@ export function useKuzuMemory(options: UseKuzuMemoryOptions = {}): UseKuzuMemory
     config.maxMemories,
     config.decayEnabled,
     config.decayInterval,
-    config.embeddingProvider
+    config.embeddingProvider,
+    config.nlp,
   ]);
 
   const initialize = useCallback(async () => {
-    // Prevent multiple initializations
-    if (initializedRef.current || initPromiseRef.current) {
-      if (initPromiseRef.current) {
+    // Prevent multiple concurrent initializations with better race condition handling
+    if (initializedRef.current) {
+      return; // Already initialized
+    }
+
+    if (initPromiseRef.current) {
+      // Already initializing, wait for it to complete
+      try {
         await initPromiseRef.current;
+      } catch {
+        // Ignore errors here, they will be handled in the UI state
       }
       return;
     }
@@ -70,22 +90,31 @@ export function useKuzuMemory(options: UseKuzuMemoryOptions = {}): UseKuzuMemory
 
     const initPromise = (async () => {
       try {
-        const memoryClient = await createMemoryClient(configMemo);
+        // Add timeout for initialization to prevent hanging
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Initialization timeout after 30 seconds')), 30000);
+        });
 
-        // Check if component is still mounted
-        if (initPromiseRef.current) {
+        const memoryClient = await Promise.race([
+          createMemoryClient(configMemo),
+          timeoutPromise
+        ]);
+
+        // Double-check component is still mounted and we're still initializing
+        if (initPromiseRef.current && !initializedRef.current) {
           clientRef.current = memoryClient;
           setClient(memoryClient);
           setIsInitialized(true);
           initializedRef.current = true;
         } else {
-          // Component was unmounted during initialization, cleanup
+          // Component was unmounted or re-initialized during setup, cleanup
           memoryClient.destroy();
         }
       } catch (err) {
         if (initPromiseRef.current) {
-          setError(err as Error);
-          console.error('Failed to initialize KuzuMemory:', err);
+          const error = err as Error;
+          setError(error);
+          console.error('Failed to initialize KuzuMemory:', error);
         }
       } finally {
         if (initPromiseRef.current) {
@@ -96,7 +125,12 @@ export function useKuzuMemory(options: UseKuzuMemoryOptions = {}): UseKuzuMemory
     })();
 
     initPromiseRef.current = initPromise;
-    await initPromise;
+
+    try {
+      await initPromise;
+    } catch {
+      // Error handling is done in the promise itself
+    }
   }, [configMemo]);
 
   const reset = useCallback(async () => {
@@ -117,22 +151,50 @@ export function useKuzuMemory(options: UseKuzuMemoryOptions = {}): UseKuzuMemory
   }, []);
 
   useEffect(() => {
-    if (autoInit && !isServerSide) {
-      initialize();
+    let mounted = true;
+
+    if (autoInit && !isServerSide && mounted) {
+      // Use a small delay to batch multiple rapid re-initializations
+      const timeoutId = setTimeout(() => {
+        if (mounted) {
+          initialize();
+        }
+      }, 0);
+
+      return () => {
+        mounted = false;
+        clearTimeout(timeoutId);
+      };
     }
 
     return () => {
-      // Cleanup on unmount
-      if (clientRef.current) {
-        clientRef.current.destroy();
-        clientRef.current = null;
-      }
+      mounted = false;
+    };
+  }, [autoInit, initialize]);
+
+  // Separate cleanup effect to ensure proper cleanup order
+  useEffect(() => {
+    return () => {
+      // Mark as unmounted first
       if (initPromiseRef.current) {
         initPromiseRef.current = null;
       }
+
+      // Then cleanup client
+      if (clientRef.current) {
+        try {
+          clientRef.current.destroy();
+        } catch (error) {
+          console.warn('Error during KuzuMemory cleanup:', error);
+        } finally {
+          clientRef.current = null;
+        }
+      }
+
+      // Reset state
       initializedRef.current = false;
     };
-  }, [autoInit, initialize]);
+  }, []);
 
   return {
     client,

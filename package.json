@@ -1,6 +1,6 @@
 {
   "name": "kuzu-memory",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "A TypeScript library for semantic memory management in Next.js applications",
   "license": "MIT",
   "author": "Bob Matnyc",
@@ -20,7 +20,9 @@
   ],
   "scripts": {
     "dev": "tsup --watch",
-    "build": "tsup",
+    "build": "tsup && npm run build:server",
+    "build:lib": "tsup",
+    "build:server": "tsup --config tsup.server.config.ts",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "test": "jest",
@@ -34,6 +36,9 @@
     "test:uat:hooks": "node tests/run-uat.js hooks",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
+    "test:nlp": "jest --config=jest.config.nlp.js",
+    "mcp:serve": "node dist/mcp/server.js",
+    "mcp:dev": "tsx src/mcp/server.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -45,12 +50,6 @@
     "typescript",
     "knowledge-graph"
   ],
-  "author": "",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/kuzu-memory-ts.git"
-  },
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
@@ -64,9 +63,16 @@
     }
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "@types/dompurify": "^3.0.5",
+    "@types/natural": "^5.1.5",
     "date-fns": "^3.3.1",
     "dexie": "^3.2.4",
     "dexie-react-hooks": "^1.1.7",
+    "dompurify": "^3.2.7",
+    "events": "^3.3.0",
+    "kuzu": "^0.11.2",
+    "natural": "^8.1.0",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },
@@ -101,10 +107,30 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
+    "./lazy": {
+      "types": "./dist/index.lazy.d.ts",
+      "import": "./dist/index.lazy.mjs",
+      "require": "./dist/index.lazy.js"
+    },
     "./hooks": {
       "types": "./dist/hooks/index.d.ts",
       "import": "./dist/hooks/index.mjs",
       "require": "./dist/hooks/index.js"
+    },
+    "./query-builder": {
+      "types": "./dist/core/QueryBuilder.d.ts",
+      "import": "./dist/core/QueryBuilder.mjs",
+      "require": "./dist/core/QueryBuilder.js"
+    },
+    "./monitoring": {
+      "types": "./dist/monitoring/MetricsCollector.d.ts",
+      "import": "./dist/monitoring/MetricsCollector.mjs",
+      "require": "./dist/monitoring/MetricsCollector.js"
+    },
+    "./domain": {
+      "types": "./dist/domain/index.d.ts",
+      "import": "./dist/domain/index.mjs",
+      "require": "./dist/domain/index.js"
     }
   },
   "engines": {

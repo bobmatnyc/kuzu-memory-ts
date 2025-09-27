@@ -7,5 +7,5 @@ export {
   type UseMemorySubscriptionOptions,
   type UseMemorySubscriptionReturn,
   type UseMemorySubscriptionCallbacks,
-  type EventHandler
+  type EventHandler,
 } from './useMemorySubscription';

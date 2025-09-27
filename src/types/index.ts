@@ -6,7 +6,8 @@ export const MemoryTypeEnum = z.enum([
   'semantic',
   'procedural',
   'working',
-  'sensory'
+  'sensory',
+  'preference',
 ]);
 
 export type MemoryType = z.infer<typeof MemoryTypeEnum>;
@@ -55,8 +56,8 @@ export const MemoryQuerySchema = z.object({
     start: z.date(),
     end: z.date(),
   }).optional(),
-  limit: z.number().positive().default(10),
-  offset: z.number().nonnegative().default(0),
+  limit: z.number().int().min(1).default(10),
+  offset: z.number().int().min(0).default(0),
   sortBy: z.enum(['relevance', 'timestamp', 'importance', 'accessCount']).default('relevance'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
@@ -99,7 +100,7 @@ export interface ExtractionResult {
 
 // Configuration
 export const KuzuConfigSchema = z.object({
-  storage: z.enum(['indexeddb', 'memory', 'localStorage']).default('indexeddb'),
+  storage: z.enum(['indexeddb', 'memory', 'localStorage', 'kuzu']).default('indexeddb'),
   dbName: z.string().default('kuzu-memory'),
   version: z.number().positive().default(1),
   autoSync: z.boolean().default(false),
@@ -108,6 +109,15 @@ export const KuzuConfigSchema = z.object({
   decayEnabled: z.boolean().default(true),
   decayInterval: z.number().positive().default(86400000), // 24 hours
   embeddingProvider: z.function().args(z.string()).returns(z.promise(z.array(z.number()))).optional(),
+  nlp: z.object({
+    autoClassify: z.boolean().default(true),
+    autoImportance: z.boolean().default(true),
+    confidenceThreshold: z.number().min(0).max(1).default(0.6),
+    customTrainingData: z.array(z.object({
+      text: z.string(),
+      type: MemoryTypeEnum,
+    })).optional(),
+  }).optional(),
 });
 
 export type KuzuConfig = z.infer<typeof KuzuConfigSchema>;

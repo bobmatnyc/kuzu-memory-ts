@@ -5,6 +5,23 @@ export * from './extraction';
 export * from './recall';
 export * from './utils';
 
+// NLP module
+export {
+  MemoryClassifier,
+  type ClassifierConfig,
+  type ClassificationResult,
+} from './nlp/MemoryClassifier';
+export {
+  allTrainingData,
+  episodicTrainingData,
+  semanticTrainingData,
+  proceduralTrainingData,
+  workingTrainingData,
+  sensoryTrainingData,
+  preferenceTrainingData,
+  type TrainingExample,
+} from './nlp/TrainingData';
+
 // Core API
 export { KuzuMemory } from './core/KuzuMemory';
 export { createMemoryClient } from './core/client';

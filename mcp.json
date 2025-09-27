@@ -1,0 +1,62 @@
+{
+  "name": "kuzu-memory",
+  "version": "0.2.0",
+  "description": "Semantic memory management for AI applications",
+  "author": "Bob Matnyc",
+  "license": "MIT",
+  "homepage": "https://github.com/bobmatnyc/kuzu-memory-ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bobmatnyc/kuzu-memory-ts.git"
+  },
+  "runtime": "node",
+  "main": "dist/mcp/server.js",
+  "commands": {
+    "start": "node dist/mcp/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.2"
+  },
+  "tools": [
+    {
+      "name": "create_memory",
+      "description": "Store new information in semantic memory"
+    },
+    {
+      "name": "recall_memories",
+      "description": "Retrieve memories based on a query"
+    },
+    {
+      "name": "get_memory",
+      "description": "Retrieve a specific memory by ID"
+    },
+    {
+      "name": "update_memory",
+      "description": "Update an existing memory"
+    },
+    {
+      "name": "delete_memory",
+      "description": "Delete a memory by ID"
+    },
+    {
+      "name": "clear_memories",
+      "description": "Clear all memories or memories of a specific type"
+    },
+    {
+      "name": "get_memory_stats",
+      "description": "Get statistics about stored memories"
+    }
+  ],
+  "resources": [
+    {
+      "uri": "memory://stats",
+      "name": "Memory Statistics",
+      "description": "Current memory system statistics"
+    },
+    {
+      "uri": "memory://recent",
+      "name": "Recent Memories",
+      "description": "Most recently created memories"
+    }
+  ]
+}

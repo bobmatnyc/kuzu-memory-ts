@@ -49,6 +49,18 @@ async function basicExample() {
     }
   );
 
+  const preferenceMemory = await memory.create(
+    'I prefer using TypeScript over JavaScript for large projects',
+    {
+      type: 'preference',
+      tags: ['development', 'typescript', 'preferences'],
+      importance: 0.7,
+      metadata: {
+        category: 'tooling-preference',
+      },
+    }
+  );
+
   // Search for memories
   const reactNotes = await memory.recall('React hooks useState', {
     limit: 5,
@@ -516,6 +528,19 @@ export class LearningJournal {
     });
   }
 
+  async addPreference(content: string, category: string, strength: 'strong' | 'moderate' | 'mild') {
+    return this.memory.create(content, {
+      type: 'preference',
+      tags: ['preference', category.toLowerCase()],
+      importance: strength === 'strong' ? 0.8 : strength === 'moderate' ? 0.6 : 0.4,
+      metadata: {
+        category,
+        strength,
+        type: 'user-preference',
+      },
+    });
+  }
+
   async getTopicsOverview() {
     const memories = await this.memory.query({
       tags: ['learning'],
@@ -558,6 +583,12 @@ export async function useLearningJournal(client: KuzuMemoryClient) {
     'Successfully migrated the user authentication system from JWT to OAuth2, improving security and user experience',
     'Auth Migration',
     'success'
+  );
+
+  await journal.addPreference(
+    'I prefer using functional programming patterns over object-oriented approaches',
+    'Programming Style',
+    'strong'
   );
 
   return journal;

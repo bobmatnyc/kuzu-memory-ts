@@ -41,13 +41,15 @@ export function createRecallStrategy(options: RecallStrategyOptions): RecallStra
         ]);
       }
 
-      const strategies = options.strategies.map(s => ({
-        strategy: createRecallStrategy({
-          type: s.type,
-          embeddingFunction: options.embeddingFunction,
-        }),
-        weight: s.weight,
-      }));
+      const strategies = options.strategies.map(s => {
+        return {
+          strategy: createRecallStrategy({
+            type: s.type,
+            embeddingFunction: options.embeddingFunction,
+          }),
+          weight: s.weight,
+        };
+      });
 
       return new CompositeStrategy(strategies);
 

@@ -27,7 +27,7 @@ export function useMemoryMutation(options: UseMemoryMutationOptions & { client: 
 
 export function useMemoryMutation(
   clientOrOptions: KuzuMemory | null | (UseMemoryMutationOptions & { client: KuzuMemory | null }),
-  options: UseMemoryMutationOptions = {}
+  options: UseMemoryMutationOptions = {},
 ): UseMemoryMutationReturn {
   // Handle both call patterns
   let client: KuzuMemory | null;
@@ -62,7 +62,7 @@ export function useMemoryMutation(
   const executeWithOptimistic = useCallback(
     async <T>(
       operation: () => Promise<T>,
-      optimisticData?: MemoryItem
+      optimisticData?: MemoryItem,
     ): Promise<T | null> => {
       if (!client) {
         const err = new Error('KuzuMemory client not initialized');
@@ -94,8 +94,9 @@ export function useMemoryMutation(
 
         // Update with actual result
         if (result && typeof result === 'object' && 'id' in result) {
-          setData(result as MemoryItem);
-          onSuccess?.(result as MemoryItem);
+          const memoryResult = result as unknown as MemoryItem;
+          setData(memoryResult);
+          onSuccess?.(memoryResult);
         }
 
         return result;
@@ -121,13 +122,13 @@ export function useMemoryMutation(
         }
       }
     },
-    [client, onSuccess, onError, optimistic]
+    [client, onSuccess, onError, optimistic],
   );
 
   const create = useCallback(
     async (
       content: string,
-      metadata?: Partial<MemoryItem>
+      metadata?: Partial<MemoryItem>,
     ): Promise<MemoryItem | null> => {
       // Create optimistic data if enabled
       const optimisticData = optimistic ? {
@@ -145,17 +146,17 @@ export function useMemoryMutation(
 
       return executeWithOptimistic(
         () => client!.create(content, metadata),
-        optimisticData
+        optimisticData,
       );
     },
-    [client, executeWithOptimistic, optimistic]
+    [client, executeWithOptimistic, optimistic],
   );
 
   // store is an alias for create for compatibility with tests
   const store = useCallback(
     async (
       contentOrData: string | Omit<MemoryItem, 'id'>,
-      metadata?: Partial<MemoryItem>
+      metadata?: Partial<MemoryItem>,
     ): Promise<MemoryItem | null> => {
       if (typeof contentOrData === 'string') {
         return create(contentOrData, metadata);
@@ -165,19 +166,19 @@ export function useMemoryMutation(
         return create(content, { ...rest, ...metadata });
       }
     },
-    [create]
+    [create],
   );
 
   const update = useCallback(
     async (
       id: string,
-      updates: Partial<MemoryItem>
+      updates: Partial<MemoryItem>,
     ): Promise<MemoryItem | null> => {
       return executeWithOptimistic(
-        () => client!.update(id, updates)
+        () => client!.update(id, updates),
       );
     },
-    [client, executeWithOptimistic]
+    [client, executeWithOptimistic],
   );
 
   const remove = useCallback(
@@ -206,7 +207,7 @@ export function useMemoryMutation(
         setIsLoading(false);
       }
     },
-    [client, onError]
+    [client, onError],
   );
 
   // delete is an alias for remove

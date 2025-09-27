@@ -8,11 +8,11 @@ export interface DecayOptions {
 
 export function calculateDecay(
   memory: MemoryItem,
-  options: DecayOptions = { halfLife: 30, minImportance: 0.1 }
+  options: DecayOptions = { halfLife: 30, minImportance: 0.1 },
 ): number {
   const daysSinceAccess = differenceInDays(
     new Date(),
-    memory.lastAccessed || memory.timestamp
+    memory.lastAccessed || memory.timestamp,
   );
 
   const decayFactor = Math.exp(-0.693 * (daysSinceAccess / options.halfLife));
@@ -23,7 +23,7 @@ export function calculateDecay(
 
 export function applyDecayToMemories(
   memories: MemoryItem[],
-  options?: DecayOptions
+  options?: DecayOptions,
 ): MemoryItem[] {
   return memories.map(memory => ({
     ...memory,
@@ -33,7 +33,7 @@ export function applyDecayToMemories(
 
 export function shouldForget(
   memory: MemoryItem,
-  threshold: number = 0.1
+  threshold: number = 0.1,
 ): boolean {
   const currentImportance = calculateDecay(memory);
   return currentImportance < threshold;

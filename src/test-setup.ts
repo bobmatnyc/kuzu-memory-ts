@@ -75,7 +75,12 @@ console.error = (...args: any[]) => {
 };
 
 // Clean up after each test
-afterEach(() => {
-  jest.clearAllMocks();
-  localStorageMock.clear();
-});
+declare const afterEach: any;
+declare const jest: any;
+
+if (typeof afterEach !== 'undefined' && typeof jest !== 'undefined') {
+  afterEach(() => {
+    jest.clearAllMocks();
+    localStorageMock.clear();
+  });
+}

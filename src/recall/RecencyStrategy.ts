@@ -11,7 +11,7 @@ export class RecencyStrategy implements RecallStrategy {
       filtered = memories.filter(memory =>
         memory.content.toLowerCase().includes(queryLower) ||
         memory.tags.some(tag => tag.toLowerCase().includes(queryLower)) ||
-        (memory.metadata && JSON.stringify(memory.metadata).toLowerCase().includes(queryLower))
+        (memory.metadata && JSON.stringify(memory.metadata).toLowerCase().includes(queryLower)),
       );
     }
 
@@ -23,7 +23,7 @@ export class RecencyStrategy implements RecallStrategy {
     });
   }
 
-  score(memory: MemoryItem, query: string): number {
+  score(memory: MemoryItem, _query: string): number {
     // Score based on how recent the memory is
     const now = Date.now();
     const memoryTime = new Date(memory.timestamp).getTime();

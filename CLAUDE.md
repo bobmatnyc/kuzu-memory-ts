@@ -192,12 +192,12 @@ const memory = createMemoryClient({
 - **README.md** - Project overview with production status
 
 ### 🟡 IMPORTANT - Implementation Context
-- **EXAMPLES.md** - Complete usage patterns and integration examples
-- **TROUBLESHOOTING.md** - Common issues and debugging guide
-- **DEVELOPER.md** - Contributor and development patterns
+- **docs/EXAMPLES.md** - Complete usage patterns and integration examples
+- **docs/TROUBLESHOOTING.md** - Common issues and debugging guide
+- **docs/developer/DEVELOPER.md** - Contributor and development patterns
 
 ### 🟢 STANDARD - Technical Reference
-- **CODE_STRUCTURE.md** - Architectural documentation
+- **docs/developer/CODE_STRUCTURE.md** - Architectural documentation
 - **Makefile** - Single-path command reference
 - **package.json** - Dependencies and scripts
 

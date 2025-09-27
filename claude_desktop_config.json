@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "kuzu-memory": {
+      "command": "node",
+      "args": [
+        "/Users/masa/Projects/managed/kuzu-memory-ts/dist/mcp/server.js"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -61,12 +61,12 @@ export class SimilarityStrategy implements RecallStrategy {
       // Also check for exact matches in content/tags
       hasMatch: memory.content.toLowerCase().includes(queryLower) ||
                 memory.tags.some(tag => tag.toLowerCase().includes(queryLower)) ||
-                (memory.metadata && JSON.stringify(memory.metadata).toLowerCase().includes(queryLower))
+                (memory.metadata && JSON.stringify(memory.metadata).toLowerCase().includes(queryLower)),
     }));
 
     // Filter out memories with no matches and very low similarity scores
     const filtered = scoredMemories.filter(item =>
-      item.hasMatch || item.score > 0.1 // Keep if has exact match or decent similarity
+      item.hasMatch || item.score > 0.1, // Keep if has exact match or decent similarity
     );
 
     // Return empty if no relevant results

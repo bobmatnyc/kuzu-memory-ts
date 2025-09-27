@@ -40,7 +40,7 @@ export function useMemorySubscription(
 export function useMemorySubscription(
   clientOrOptions: KuzuMemory | null | (UseMemorySubscriptionOptions & { client: KuzuMemory | null }),
   callbacks?: UseMemorySubscriptionCallbacks,
-  options: { eventTypes?: MemoryEvent['type'][]; enabled?: boolean } = {}
+  options: { eventTypes?: MemoryEvent['type'][]; enabled?: boolean } = {},
 ): UseMemorySubscriptionReturn {
   // Handle both call patterns
   let client: KuzuMemory | null;
@@ -110,7 +110,7 @@ export function useMemorySubscription(
   useEffect(() => {
     if (!client || !enabled) {
       unsubscribe();
-      return;
+      return undefined;
     }
 
     const handler: EventHandler = (event) => {
@@ -169,6 +169,7 @@ export function useMemorySubscription(
     } catch (error) {
       console.error('Failed to subscribe to memory events:', error);
       setIsSubscribed(false);
+      return undefined;
     }
   }, [client, enabled, eventTypes, unsubscribe]);
 

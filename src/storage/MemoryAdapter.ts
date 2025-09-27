@@ -85,7 +85,7 @@ export class MemoryAdapter implements StorageAdapter {
     // Filter by tags
     if (query.tags && query.tags.length > 0) {
       items = items.filter(item =>
-        query.tags!.some(tag => item.tags.includes(tag))
+        query.tags!.some(tag => item.tags.includes(tag)),
       );
     }
 
@@ -102,7 +102,7 @@ export class MemoryAdapter implements StorageAdapter {
       const searchText = query.text.toLowerCase();
       items = items.filter(item =>
         item.content.toLowerCase().includes(searchText) ||
-        item.tags.some(tag => tag.toLowerCase().includes(searchText))
+        item.tags.some(tag => tag.toLowerCase().includes(searchText)),
       );
     }
 
